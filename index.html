@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Çekiliş Sitesi</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #1A1A1D, #3B1C32);
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+        .container {
+            background-color: #fff;
+            padding: 40px 30px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            width: 100%;
+            max-width: 500px;
+        }
+        h1 {
+            font-size: 36px;
+            color: #6A1E55;
+            margin-bottom: 20px;
+        }
+        label {
+            font-size: 18px;
+            color: #3B1C32;
+            margin-bottom: 10px;
+            display: inline-block;
+        }
+        input {
+            width: 100%;
+            padding: 15px;
+            margin: 15px 0;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #6A1E55;
+            color: white;
+            padding: 15px 30px;
+            font-size: 18px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+        }
+        .countdown {
+            font-size: 48px;
+            color: #FFB6C1;
+            font-weight: bold;
+            margin-top: 20px;
+        }
+        .status-message {
+            font-size: 32px;
+            color: #FFB6C1;
+            font-weight: bold;
+            margin-top: 20px;
+            opacity: 0;
+            transition: opacity 1s ease;
+        }
+        .result {
+            font-size: 24px;
+            margin-top: 20px;
+            color: #6A1E55;
+            font-weight: bold;
+            white-space: pre-line; /* Sonuçları sıralı şekilde göstermek için */
+            opacity: 0;
+            transition: opacity 1s ease;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Çekiliş Yap</h1>
+        <label for="names">Kullanıcıları virgülle ayırarak girin:</label><br>
+        <input type="text" id="names" placeholder="Örneğin: Ahmet, Ayşe, Mehmet">
+        <br>
+        <button onclick="startLottery()">Çekilişi Başlat</button>
+        <div class="status-message" id="statusMessage"></div>
+        <div class="countdown" id="countdown"></div>
+        <div class="result" id="result"></div>
+    </div>
+    <audio id="music" loop>
+        <source src="music.mp3" type="audio/mp3">
+    </audio>
+    <script>
+        let messageIndex = 0;
+        const messages = [
+            "Hazır mısınız?",
+            "Bence Değilsiniz",
+            "Çekiliş Başlıyor!"
+        ];
+
+        function startLottery() {
+            // Müzik çalmaya başla
+            const music = document.getElementById("music");
+            music.play();
+
+            // Mesajları sırayla göster
+            showNextMessage();
+        }
+
+        function showNextMessage() {
+            const statusElement = document.getElementById('statusMessage');
+            
+            if (messageIndex < messages.length) {
+                statusElement.style.opacity = 0; // Önce mesajı gizle
+                setTimeout(() => {
+                    statusElement.innerText = messages[messageIndex];
+                    statusElement.style.opacity = 1; // Mesajı göster
+                    messageIndex++;
+                    setTimeout(showNextMessage, 3000); // 3sn sonra bir sonraki mesajı göster
+                }, 1000); // 1sn animasyon geçişi bekle
+            } else {
+                setTimeout(startCountdown, 1000); // Son mesaj sonrası geri sayımı başlat
+            }
+        }
+
+        function startCountdown() {
+            const countdownElement = document.getElementById('countdown');
+            let countdownValue = 5;
+            countdownElement.innerText = countdownValue;
+            
+            let countdownInterval = setInterval(function() {
+                countdownValue--;
+                countdownElement.innerText = countdownValue;
+                
+                if (countdownValue <= 0) {
+                    clearInterval(countdownInterval);
+                    countdownElement.style.display = 'none'; // Geri sayım bittiğinde gizle
+                    beginDraw(); // Çekiliş başlatılıyor
+                }
+            }, 1000);
+        }
+
+        function beginDraw() {
+            // Çekiliş başlatıldı, kullanıcıları eşleştir
+            const input = document.getElementById('names').value;
+            const names = input.split(',').map(name => name.trim());
+
+            if (names.length < 2) {
+                document.getElementById('result').innerText = 'Lütfen en az 2 kişi girin!';
+                return;
+            }
+
+            // Kullanıcıları rastgele eşleştir
+            const shuffled = shuffle(names);
+            const pairs = [];
+
+            for (let i = 0; i < shuffled.length; i += 2) {
+                if (shuffled[i + 1]) {
+                    pairs.push(`${shuffled[i]} - ${shuffled[i + 1]}`);
+                } else {
+                    pairs.push(`${shuffled[i]} için eşleşen yok.`);
+                }
+            }
+
+            // Sonuçları sırayla göster
+            let resultText = '';
+            let index = 0;
+            const resultElement = document.getElementById('result');
+            resultElement.style.opacity = 1; // Sonuç kutusunu görünür yap
+
+            function showNextPair() {
+                if (index < pairs.length) {
+                    resultText += pairs[index] + '\n';
+                    resultElement.innerText = resultText;
+                    index++;
+                    setTimeout(showNextPair, 3000); // 3sn arayla sırayla göster
+                }
+            }
+
+            showNextPair();
+        }
+
+        // Rastgele sıralama fonksiyonu
+        function shuffle(arr) {
+            for (let i = arr.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [arr[i], arr[j]] = [arr[j], arr[i]]; // Değiş tokuş yap
+            }
+            return arr;
+        }
+    </script>
+</body>
+</html>
