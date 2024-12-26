@@ -100,16 +100,16 @@
             "Bence Değilsiniz",
             "Çekiliş Başlıyor!"
         ];
-
+    
         function startLottery() {
             // Müzik çalmaya başla
             const music = document.getElementById("music");
             music.play();
-
+    
             // Mesajları sırayla göster
             showNextMessage();
         }
-
+    
         function showNextMessage() {
             const statusElement = document.getElementById('statusMessage');
             
@@ -125,7 +125,7 @@
                 setTimeout(startCountdown, 1000); // Son mesaj sonrası geri sayımı başlat
             }
         }
-
+    
         function startCountdown() {
             const countdownElement = document.getElementById('countdown');
             let countdownValue = 5;
@@ -142,47 +142,58 @@
                 }
             }, 1000);
         }
-
+    
         function beginDraw() {
             // Çekiliş başlatıldı, kullanıcıları eşleştir
             const input = document.getElementById('names').value;
             const names = input.split(',').map(name => name.trim());
-
+    
             if (names.length < 2) {
                 document.getElementById('result').innerText = 'Lütfen en az 2 kişi girin!';
                 return;
             }
-
-            // Kullanıcıları rastgele eşleştir
+    
+            // Kullanıcıları rastgele karıştır
             const shuffled = shuffle(names);
-            const pairs = [];
-
-            for (let i = 0; i < shuffled.length; i += 2) {
-                if (shuffled[i + 1]) {
-                    pairs.push(`${shuffled[i]} - ${shuffled[i + 1]}`);
-                } else {
-                    pairs.push(`${shuffled[i]} için eşleşen yok.`);
-                }
+            
+            // Hediye vereceklerin ve alacakların ayrı listeleri
+            const giftPairs = [];
+            const availableRecipients = [...shuffled]; // Alıcılar için kullanılacak liste
+    
+            for (let i = 0; i < shuffled.length; i++) {
+                const giver = shuffled[i];
+                let receiver;
+    
+                // Hediye veren kişi kendine hediye veremez, bunu engellemek için alıcıları karıştırıyoruz
+                do {
+                    receiver = availableRecipients[Math.floor(Math.random() * availableRecipients.length)];
+                } while (receiver === giver); // Kişi kendisine hediye veremez
+    
+                // Alıcıyı listeden çıkarıyoruz
+                availableRecipients.splice(availableRecipients.indexOf(receiver), 1);
+    
+                // Hediye eşleşmesini kaydet
+                giftPairs.push(`${giver} → ${receiver}`);
             }
-
+    
             // Sonuçları sırayla göster
             let resultText = '';
             let index = 0;
             const resultElement = document.getElementById('result');
             resultElement.style.opacity = 1; // Sonuç kutusunu görünür yap
-
+    
             function showNextPair() {
-                if (index < pairs.length) {
-                    resultText += pairs[index] + '\n';
+                if (index < giftPairs.length) {
+                    resultText += giftPairs[index] + '\n';
                     resultElement.innerText = resultText;
                     index++;
                     setTimeout(showNextPair, 3000); // 3sn arayla sırayla göster
                 }
             }
-
+    
             showNextPair();
         }
-
+    
         // Rastgele sıralama fonksiyonu
         function shuffle(arr) {
             for (let i = arr.length - 1; i > 0; i--) {
@@ -191,6 +202,6 @@
             }
             return arr;
         }
-    </script>
+    </script>    
 </body>
 </html>
